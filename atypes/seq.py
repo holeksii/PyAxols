@@ -4,10 +4,12 @@ from typing import Callable, Type, Sequence, AnyStr
 class Seq:
     def __init__(
         self,
-        data: Sequence["dtype"] = [],
+        data: Sequence["dtype"] = None,
         name: AnyStr = "unnamed",
         dtype: Type = object,
     ):
+        if data is None:
+            data = []
         self._dtype = dtype
         self._data = data
         self._name = name
@@ -93,10 +95,9 @@ class Seq:
     def _data(self, data) -> None:
         if not isinstance(data, Sequence):
             raise TypeError("data must be a sequence")
-        for d in data:
-            if d is not None:
-                self.dtype(d)
-        self.__data = list(data)
+        if self.dtype is not object:
+            data = list(map(self.dtype, data))
+        self.__data = data
 
     def __str__(self) -> str:
         from tabulate import tabulate
@@ -109,8 +110,7 @@ class Seq:
         return len(self.data)
 
     def __getitem__(self, position: int) -> "dtype":
-        item = self.data[position]
-        return self.dtype(item)
+        return self.data[position]
 
     def __iter__(self):
         return iter(self.data)

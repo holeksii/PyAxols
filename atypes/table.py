@@ -1,6 +1,6 @@
 from typing import Sequence, Type
 from utils import argsort
-from seq import Seq
+from .seq import Seq
 from copy import copy
 
 
@@ -183,8 +183,14 @@ class Table:
         d = {col: Seq(d, col, dtype) for col, d, dtype in zip(cols, data, dtypes)}
         return Table(d)
 
+    def head(self, n: int = 5) -> "Table":
+        return Table({k: v.head(n) for k, v in self._data.items()})
+
+    def tail(self, n: int = 5) -> "Table":
+        return Table({k: v.tail(n) for k, v in self._data.items()})
+
     @property
-    def cols(self) -> set[str]:
+    def cols(self) -> tuple[str]:
         return tuple(self._data.keys())
 
     @property
@@ -193,7 +199,10 @@ class Table:
 
     @property
     def shape(self) -> tuple[int, int]:
-        return len(self), len(self._data)
+        if len(self):
+            return len(self), len(self[self.cols[0]])
+        else:
+            return 0, 0
 
     def __getitem__(self, key: str | Sequence[str]) -> "Seq | Table":
         if isinstance(key, str):
