@@ -2,6 +2,7 @@ from typing import Sequence, Type
 from utils import argsort
 from .seq import Seq
 from copy import copy
+import matplotlib.pyplot as plt
 
 
 class Table:
@@ -125,8 +126,8 @@ class Table:
             self._data[k] = v.grow(max_len - len(v))
 
     @staticmethod
-    def _create_cols(cols: set[str], data: Sequence[Sequence]) -> set[str]:
-        if cols == {}:
+    def _create_cols(cols: set[str], data: Sequence[Sequence]) -> tuple[str]:
+        if cols is None:
             if isinstance(data[0], Seq):
                 cols = (s.name for s in data)
             else:
@@ -138,7 +139,7 @@ class Table:
                 raise ValueError("cols must be unique")
             elif not all(isinstance(n, str) for n in cols):
                 raise TypeError("cols must be a sequence of strings")
-        return set(cols)
+        return tuple(cols)
 
     @staticmethod
     def empty(cols: Sequence[str] = [], dtypes: Sequence[Type] = []) -> "Table":
@@ -170,7 +171,7 @@ class Table:
 
     @staticmethod
     def from_iterable(
-        data: Sequence, cols: set[str] = {}, dtypes: Sequence[Type] = None
+        data: Sequence, cols: tuple[str] = None, dtypes: Sequence[Type] = None
     ) -> "Table":
         cols = Table._create_cols(cols, data)
         if dtypes is None:
@@ -188,6 +189,9 @@ class Table:
 
     def tail(self, n: int = 5) -> "Table":
         return Table({k: v.tail(n) for k, v in self._data.items()})
+
+    def plot(self, x: str, y: str, *args, **kargs) -> None:
+        plt.plot(self[x], self[y], *args, **kargs)
 
     @property
     def cols(self) -> tuple[str]:
@@ -225,8 +229,11 @@ class Table:
 
         return tabulate(self._data, headers="keys", tablefmt="psql", showindex=True)
 
+    def __repr__(self) -> str:
+        return self.__str__()
+
     def __len__(self) -> int:
         return len(self._data)
 
-    def __iter__(self) -> "Table":
+    def __iter__(self):
         return iter(self._data)

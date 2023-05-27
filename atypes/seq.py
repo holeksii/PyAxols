@@ -1,3 +1,4 @@
+import json
 from typing import Callable, Type, Sequence, AnyStr
 
 
@@ -56,6 +57,9 @@ class Seq:
 
     def as_pycollection(self, coltype: Type) -> Sequence:
         return coltype(self.data)
+
+    def toJson(self) -> str:
+        return json.dumps(self.data)
 
     @staticmethod
     def empty(name: AnyStr = "unnamed", dtype: Type = object) -> "Seq":
