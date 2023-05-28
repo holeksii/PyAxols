@@ -1,12 +1,12 @@
-import json
-from typing import Callable, Type, Sequence, AnyStr
+from typing import Callable, Type, Sequence
+import matplotlib.pyplot as plt
 
 
 class Seq:
     def __init__(
         self,
         data: Sequence["dtype"] = None,
-        name: AnyStr = "unnamed",
+        name: str = "unnamed",
         dtype: Type = object,
     ):
         if data is None:
@@ -25,7 +25,7 @@ class Seq:
     def tail(self, n: int = 1) -> "Seq":
         return Seq(self.data[-n:], self.name, self.dtype)
 
-    def rename(self, name: AnyStr) -> "Seq":
+    def rename(self, name: str) -> "Seq":
         self.name = name
         return self
 
@@ -47,10 +47,10 @@ class Seq:
         return Seq(sorted(self.data, reverse=desc), self.name, self.dtype)
 
     def filter(self, f: Callable[["dtype"], bool]) -> "Seq":
-        return Seq(tuple(filter(f, self.data)), self.name, self.dtype)
+        return Seq(list(filter(f, self.data)), self.name, self.dtype)
 
     def map(self, f: Callable[["dtype"], "dtype"]) -> "Seq":
-        return Seq(tuple(map(f, self.data)), self.name, self.dtype)
+        return Seq(list(map(f, self.data)), self.name, self.dtype)
 
     def as_type(self, dtype: Type) -> "Seq":
         return Seq(self.data, self.name, dtype)
@@ -58,12 +58,22 @@ class Seq:
     def as_pycollection(self, coltype: Type) -> Sequence:
         return coltype(self.data)
 
-    def toJson(self) -> str:
-        return json.dumps(self.data)
+    def hist(self, bins: int = 10, *args, **kwargs) -> None:
+        plt.hist(self.data, bins, *args, **kwargs)
+
+    def pie(self, labels=None, *args, **kwargs) -> None:
+        if labels is not None:
+            labels = self.data
+        plt.pie(
+            self.data,
+            labels=labels,
+            *args,
+            **kwargs,
+        )
 
     @staticmethod
-    def empty(name: AnyStr = "unnamed", dtype: Type = object) -> "Seq":
-        return Seq([], name, dtype)
+    def empty(name: str = "unnamed", dtype: Type = object) -> "Seq":
+        return Seq(name=name, dtype=dtype)
 
     @property
     def _str_percentage(self) -> float:
@@ -72,11 +82,11 @@ class Seq:
         )
 
     @property
-    def name(self) -> AnyStr:
+    def name(self) -> str:
         return self._Seq__name
 
     @name.setter
-    def _name(self, name: AnyStr) -> None:
+    def _name(self, name: str) -> None:
         if not isinstance(name, str):
             raise TypeError("name must be a string")
         self.__name = name
