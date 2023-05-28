@@ -1,6 +1,5 @@
 from typing import Sequence, Type
 
-from numpy import intersect1d
 from pyaxols.utils import argsort
 from .seq import Seq
 from copy import copy
