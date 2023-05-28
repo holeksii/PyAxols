@@ -1,5 +1,5 @@
 [build-system]
-requires = ["pip", "tabulate", "matplotlib"]
+requires = ["pip", "tabulate", "matplotlib", "setuptools"]
 build-backend = "setuptools.build_meta"
 
 
