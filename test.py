@@ -1,13 +1,7 @@
-from seq import Seq
-from table import Table
+import xml.etree.ElementTree as ET
 
+tree = ET.parse("example.xml")
+root = tree.getroot()
 
-n = 5
-r = range(n)
-
-seq1 = Seq(r, "seq1")
-seq2 = Seq(r, "seq2")
-seq3 = Seq(r, "seq3")
-
-table = Table.from_seqs([seq1, seq2, seq3])
-print(table.union(table))
+for child in root:
+    print(child.tag, child.attrib)

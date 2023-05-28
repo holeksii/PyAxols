@@ -2,7 +2,7 @@ import json
 from atypes.table import Table
 
 
-def write(filepath: str, data: Table) -> None:
+def write_json(filepath: str, data: Table) -> None:
     """Write a Table to a JSON file.
 
     Args:
@@ -17,7 +17,7 @@ def write(filepath: str, data: Table) -> None:
         json.dump(lst, f, indent=4)
 
 
-def read(filepath: str) -> Table:
+def read_json(filepath: str) -> Table:
     """Read a JSON file into a Table.
 
     Args:

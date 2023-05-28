@@ -1,4 +1,6 @@
 from typing import Sequence, Type
+
+from numpy import intersect1d
 from utils import argsort
 from .seq import Seq
 from copy import copy
@@ -24,12 +26,32 @@ class Table:
             raise TypeError("other must be a Table")
         return Table({**self._data, **other._data})
 
+    def union(self, other: "Table") -> "Table":
+        if not isinstance(other, Table):
+            raise TypeError("other must be a Table")
+        if self._data.keys() != other._data.keys():
+            raise ValueError("other must have the same keys as self")
+        cpy = copy(self)
+        for row in other:
+            if not cpy.contains_row(row):
+                cpy.append_row(row)
+        return cpy
+
     def union_all(self, other: "Table") -> "Table":
         if not isinstance(other, Table):
             raise TypeError("other must be a Table")
         if self._data.keys() != other._data.keys():
             raise ValueError("other must have the same keys as self")
         return Table({k: self._data[k] + other._data[k] for k in self._data})
+
+    def intersect(self, other: "Table") -> "Table":
+        if self.cols != other.cols:
+            raise ValueError("other must have the same columns as self")
+        emt = Table.empty(self.cols, self.dtypes)
+        for row in self:
+            if other.contains_row(row):
+                emt.append_row(row)
+        return emt
 
     def row_count(self, row: Sequence) -> int:
         if len(row) != self.shape[0]:
@@ -44,7 +66,10 @@ class Table:
     def contains_row(self, row: Sequence) -> bool:
         if len(row) != self.shape[0]:
             raise ValueError("row must be the same length as cols")
-        return tuple(row) in self._data.values()
+        for r in self:
+            if r == tuple(row):
+                return True
+        return False
 
     def sorted(self, column: str, desc: bool = False) -> "Table":
         if not isinstance(column, str):
@@ -68,11 +93,39 @@ class Table:
         r = list(list(s[i] for i in argsort(pattern)) for s in self._data.values())
         return Table.from_iterable(r)
 
+    def inner_join(self, on: str, other: "Table") -> "Table":
+        if not isinstance(other, Table):
+            raise TypeError("table must be a Table")
+        if not self[on].dtype == other[on].dtype:
+            raise ValueError("on must be the same type as self")
+
+        if len(set(self.cols).intersection(set(other.cols))) != 1:
+            raise ValueError("other must not contain any of the same columns as self")
+
+        empt = Table.empty(other.cols, other.dtypes)
+        for val in self[on]:
+            index = -1
+            try:
+                index = other[on].find(val)
+            except ValueError:
+                index = -1
+            if index == -1:
+                empt.append_row([None] * self.shape[0])
+            else:
+                empt.append_row(other.i(index))
+        for col in self.cols:
+            if col in other.cols:
+                empt.drop_col(col)
+        return empt
+
     def left_join(self, on: str, other: "Table") -> "Table":
         if not isinstance(other, Table):
             raise TypeError("table must be a Table")
         if not self[on].dtype == other[on].dtype:
             raise ValueError("on must be the same type as self")
+
+        if len(set(self.cols).intersection(set(other.cols))) != 1:
+            raise ValueError("other must not contain any of the same columns as self")
 
         empt = Table.empty(other.cols, other.dtypes)
         for val in self[on]:
@@ -193,6 +246,9 @@ class Table:
     def plot(self, x: str, y: str, *args, **kargs) -> None:
         plt.plot(self[x], self[y], *args, **kargs)
 
+    def scatter(self, x: str, y: str, *args, **kargs) -> None:
+        plt.scatter(self[x], self[y], *args, **kargs)
+
     @property
     def cols(self) -> tuple[str]:
         return tuple(self._data.keys())
@@ -236,4 +292,12 @@ class Table:
         return len(self._data)
 
     def __iter__(self):
-        return iter(self._data)
+        self.it = 0
+        return self
+
+    def __next__(self):
+        if self.it < len(self):
+            self.it += 1
+            return self.i(self.it - 1)
+        else:
+            raise StopIteration

@@ -2,7 +2,7 @@ from atypes.table import Table
 import xml.etree.ElementTree as ET
 
 
-def write(filepath: str, table: Table) -> None:
+def write_xml(filepath: str, table: Table) -> None:
     """Write a Table to an XML file.
 
     Args:
@@ -22,7 +22,7 @@ def write(filepath: str, table: Table) -> None:
     tree.write(filepath, encoding="utf-8", xml_declaration=True)
 
 
-def read(filepath: str) -> Table:
+def read_xml(filepath: str) -> Table:
     """Read an XML file into a Table.
 
     Args:
