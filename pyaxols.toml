@@ -1,0 +1,23 @@
+[build-system]
+requires = ["pip", "tabulate", "matplotlib"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "PyAxols"
+version = "0.0.1"
+authors = [
+  { name="Oleksii Hytsiv", email="oleksii.hytsiv@gmail.com" },
+]
+description = "Simple Python library for data manipulation and analysis"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/holeksii/PyAxols"
+"Bug Tracker" = "https://github.com/holeksii/PyAxols/issues"

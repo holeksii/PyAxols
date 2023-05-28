@@ -1,5 +1,5 @@
 import json
-from atypes.table import Table
+from pyaxols.atypes.table import Table
 
 
 def write_json(filepath: str, data: Table) -> None:

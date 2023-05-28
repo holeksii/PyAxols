@@ -1,6 +1,6 @@
 import csv
-from atypes import Table
-from atypes.seq import Seq
+from pyaxols.atypes import Table
+from pyaxols.atypes.seq import Seq
 
 
 def write_csv(filepath: str, table: Table) -> None:

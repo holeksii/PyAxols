@@ -1,6 +1,4 @@
-from atypes.seq import Seq
-from atypes.table import Table
-import aio
+from pyaxols.atypes import Table, Seq
 
 
 drinks = Seq(["coke", "pepsi", "fanta", "sprite"], "drinks", str)
@@ -14,7 +12,7 @@ prices = Seq(
 
 fast_food = Table.from_seqs([drinks, burgers, fries, prices])
 f = fast_food[["drinks", "prices", "fries"]]
-f["prices"] = f["prices"].map(lambda x: 1)
+f["prices"] = f["prices"].map(lambda _: 1)
 f["burgers"] = burgers
 print(f)
 

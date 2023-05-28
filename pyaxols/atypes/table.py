@@ -1,7 +1,7 @@
 from typing import Sequence, Type
 
 from numpy import intersect1d
-from utils import argsort
+from pyaxols.utils import argsort
 from .seq import Seq
 from copy import copy
 import matplotlib.pyplot as plt

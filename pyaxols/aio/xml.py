@@ -1,4 +1,4 @@
-from atypes.table import Table
+from pyaxols.atypes.table import Table
 import xml.etree.ElementTree as ET
 
 
