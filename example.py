@@ -5,16 +5,17 @@ drinks = Seq(["coke", "pepsi", "fanta", "sprite"], "drinks", str)
 burgers = Seq(["big mac", "whopper", "quarter pounder", "mcchicken"], "burgers", str)
 fries = Seq(["small", "medium", "large", "super size"], "fries", str)
 prices = Seq(
-    [2.99, 1.99, 4.99, 3.99],
+    [2.99, 1.99, 4.99, 3.99, 8],
     "prices",
     float,
 )
 
 fast_food = Table.from_seqs([drinks, burgers, fries, prices])
-f = fast_food[["drinks", "prices", "fries"]]
-f["prices"] = f["prices"].map(lambda _: 1)
-f["burgers"] = burgers
-print(f)
+fast_food = fast_food.union_all(fast_food)
+# print(fast_food.sorted("drinks"))
+
+for i in fast_food.group_by("drinks"):
+    print(i)
 
 # aio.csv.write("fast_food.csv", fast_food)
 # aio.xml.write("fast_food.xml", fast_food)

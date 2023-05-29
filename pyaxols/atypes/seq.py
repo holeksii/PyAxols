@@ -296,7 +296,8 @@ class Seq:
         if not isinstance(data, Sequence):
             raise TypeError("data must be a sequence")
         if self.dtype is not object:
-            data = list(map(self.dtype, data))
+            # cast to dtype but keep nones
+            data = [self.dtype(i) if i is not None else None for i in data]
         self.__data = data
 
     def __str__(self) -> str:
@@ -323,3 +324,7 @@ class Seq:
         elif isinstance(other, Sequence):
             return Seq(self.data + other, self.name, self.dtype)
         raise TypeError("other must be a dtype, Seq, or Sequence")
+
+    # del
+    def __delitem__(self, position: int) -> None:
+        del self.data[position]

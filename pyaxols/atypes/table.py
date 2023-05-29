@@ -231,7 +231,12 @@ class Table:
 
         return Table.from_iterable(
             tuple(
-                tuple(s[i] for i in argsort(self[column].data, desc=desc))
+                tuple(
+                    s[i]
+                    for i in argsort(
+                        self[column].data, dtype=self[column].dtype, desc=desc
+                    )
+                )
                 for s in self._data.values()
             ),
             self._data.keys(),
@@ -344,6 +349,20 @@ class Table:
         """Returns a right join of two tables. Alias for left_join."""
         return other.left_join(on, self)
 
+    def group_by(self, col: str) -> list["Table"]:
+        """Returns a list of tables grouped by a column."""
+        res = []
+        prev_val = None
+        empt = Table.empty(self.cols, self.dtypes)
+        sorted = self.sorted(col)
+        for i, val in enumerate(sorted[col]):
+            if val != prev_val:
+                res.append(empt)
+                empt = Table.empty(sorted.cols, sorted.dtypes)
+            empt.append_row(sorted.i(i))
+            prev_val = val
+        return res
+
     def append_row(self, row: Sequence) -> "Table":
         """Appends a row to the table.  The row must be the same length as the table.
 
@@ -396,6 +415,39 @@ class Table:
     def dropped_col(self, col: str) -> "Table":
         """Returns a copy of the table with a column dropped."""
         return copy(self).drop_col(col)
+
+    def drop_row(self, index: int) -> "Table":
+        """Drops a row from the table.
+
+        Args:
+            index (int):
+                The index of the row to drop
+
+        Returns:
+            Table:
+                self
+        """
+        for col in self.cols:
+            del self._data[col][index]
+        return self
+
+    def dropped_row(self, index: int) -> "Table":
+        """Returns a copy of the table with a row dropped."""
+        return copy(self).drop_row(index)
+
+    def drop_nones(self) -> "Table":
+        """Drops all rows that contain None."""
+        i = 0
+        while i < self.shape[1]:
+            if any(v is None for v in self.i(i)):
+                self.drop_row(i)
+            else:
+                i += 1
+        return self
+
+    def dropped_nones(self) -> "Table":
+        """Returns a copy of the table with all rows that contain None dropped."""
+        return copy(self).drop_nones()
 
     def i(self, index: int) -> tuple:
         """Returns a row at an index."""
