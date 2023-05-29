@@ -6,9 +6,13 @@ from pyaxols.atypes.seq import Seq
 def write_csv(filepath: str, table: Table) -> None:
     """Write a Table to a CSV file.
 
-    Args:
-        filepath (str): The path to the file to write to.
-        table (Table): The Table to write.
+    Parameters
+    ----------
+    filepath : str
+        The path to the file to write.
+    table : Table
+        The Table to write to the file.
+
     """
     with open(filepath, "w") as f:
         f.write(",".join(table.cols) + "\n")
