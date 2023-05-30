@@ -2,7 +2,7 @@ from pyaxols.atypes.table import Table
 import xml.etree.ElementTree as ET
 
 
-def write_xml(filepath: str, table: Table) -> None:
+def write_xml(filepath: str, table: Table, encoding="utf-8") -> None:
     """Write a Table to an XML file.
 
     Args:
@@ -19,10 +19,10 @@ def write_xml(filepath: str, table: Table) -> None:
 
     tree = ET.ElementTree(root)
     ET.indent(tree, space="    ")
-    tree.write(filepath, encoding="utf-8", xml_declaration=True)
+    tree.write(filepath, encoding=encoding, xml_declaration=True)
 
 
-def read_xml(filepath: str) -> Table:
+def read_xml(filepath: str, encoding="utf-8") -> Table:
     """Read an XML file into a Table.
 
     Args:

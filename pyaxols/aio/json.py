@@ -2,7 +2,7 @@ import json
 from pyaxols.atypes.table import Table
 
 
-def write_json(filepath: str, data: Table) -> None:
+def write_json(filepath: str, data: Table, encoding="utf-8") -> None:
     """Write a Table to a JSON file.
 
     Args:
@@ -13,11 +13,11 @@ def write_json(filepath: str, data: Table) -> None:
         {col: val for col, val in zip(data.cols, data.i(ind))}
         for ind in range(data.shape[1])
     ]
-    with open(filepath, "w") as f:
+    with open(filepath, "w", encoding=encoding) as f:
         json.dump(lst, f, indent=4)
 
 
-def read_json(filepath: str) -> Table:
+def read_json(filepath: str, encoding="utf-8") -> Table:
     """Read a JSON file into a Table.
 
     Args:
@@ -26,7 +26,7 @@ def read_json(filepath: str) -> Table:
     Returns:
         Table: The Table read from the file.
     """
-    with open(filepath, "r") as f:
+    with open(filepath, "r", encoding=encoding) as f:
         lst = json.load(f)
 
     empt = Table.empty(

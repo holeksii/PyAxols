@@ -1,3 +1,4 @@
+from pyaxols import aio
 from pyaxols.atypes import Table, Seq
 
 
@@ -11,11 +12,23 @@ prices = Seq(
 )
 
 fast_food = Table.from_seqs([drinks, burgers, fries, prices])
-fast_food = fast_food.union_all(fast_food)
-# print(fast_food.sorted("drinks"))
 
-for i in fast_food.group_by("drinks"):
-    print(i)
+
+students = aio.csv.read_csv("students.csv")
+
+print(students)
+
+# first_name = Seq(["Artem", "Anna", "Sophie"], "FirstName", str)
+# last_name = Seq(["Hrushevskii", "Shevchenko", "Melnyk"], "LastName", str)
+# grades = Seq([4, 5, 4], "Grade", int)
+
+# print(first_name)
+
+# students = Table.from_seqs([first_name, last_name, grades])
+# aio.csv.write_csv("students.csv", students)
+# aio.xml.write_xml("students.xml", students)
+# aio.json.write_json("students.json", students)
+
 
 # aio.csv.write("fast_food.csv", fast_food)
 # aio.xml.write("fast_food.xml", fast_food)

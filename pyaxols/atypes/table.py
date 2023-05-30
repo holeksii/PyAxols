@@ -10,34 +10,36 @@ class Table:
     """A table of data.
     This is a wrapper around a dictionary of Seqs, with some extra functionality.
 
-    Attributes:
-        data (dict[str, Seq]):
-            The data stored in the table
-        cols (Sequence[str]):
-            The names of the columns
-        dtypes (Sequence[Type]):
-            The types of the columns
+    Attributes
+    ----------
+    cols : tuple[str]
+        The columns of the table
+    dtypes : tuple[Type]
+        The data types of the columns
+    data : dict[str, Seq]
+        The data stored in the table
 
-    Examples:
-        >>> from pyaxols.atypes import Table
-        >>> t = Table.from_seqs([Seq([1, 2, 3], "a", int), Seq([4, 5, 6], "b", int)
-        >>> t
-        +---+---+
-        | a | b |
-        +---+---+
-        | 1 | 4 |
-        | 2 | 5 |
-        | 3 | 6 |
-        +---+---+
+    Examples
+    --------
+    >>> from pyaxols.atypes import Table
+    >>> t = Table.from_seqs([Seq([1, 2, 3], "a", int), Seq([4, 5, 6], "b", int)
+    >>> t
+    +---+---+
+    | a | b |
+    +---+---+
+    | 1 | 4 |
+    | 2 | 5 |
+    | 3 | 6 |
+    +---+---+
 
-        >>> t.cols
-        ('a', 'b')
+    >>> t.cols
+    ('a', 'b')
 
-        >>> t.dtypes
-        (<class 'int'>, <class 'int'>)
+    >>> t.dtypes
+    (<class 'int'>, <class 'int'>)
 
-        >>> t.data
-        {'a': [1, 2, 3], 'b': [4, 5, 6]}
+    >>> t.data
+    {'a': [1, 2, 3], 'b': [4, 5, 6]}
     """
 
     def __init__(
@@ -46,13 +48,15 @@ class Table:
     ) -> None:
         """Initializes a Table.
 
-        Args:
-            data (dict[str, Seq]):
-                The data stored in the table
+        Parameters
+        ----------
+        data : dict[str, Seq]
+            The data stored in the table
 
-        Raises:
-            TypeError:
-                If data is not a dictionary of Seqs
+        Raises
+        ------
+        TypeError
+            If data is not a dictionary of Seqs
         """
         if data is None:
             data = {}
@@ -68,17 +72,20 @@ class Table:
     def concat(self, other: "Table") -> "Table":
         """Concatenates two tables.
 
-        Args:
-            other (Table):
-                The table to concatenate with
+        Parameters
+        ----------
+        other : Table
+            The table to concatenate with
 
-        Returns:
-            Table:
-                The concatenated table
+        Returns
+        -------
+        Table
+            The concatenated table
 
-        Raises:
-            TypeError:
-                If other is not a Table
+        Raises
+        ------
+        TypeError
+            If other is not a Table
         """
         if not isinstance(other, Table):
             raise TypeError("other must be a Table")
@@ -87,19 +94,22 @@ class Table:
     def union(self, other: "Table") -> "Table":
         """Returns the union of two tables without duplicates.
 
-        Args:
-            other (Table):
-                The table to union with
+        Parameters
+        ----------
+        other : Table
+            The table to union with
 
-        Returns:
-            Table:
-                The union of the two tables
+        Returns
+        -------
+        Table
+            The union of the two tables
 
-        Raises:
-            TypeError:
-                If other is not a Table
-            ValueError:
-                If other does not have the same columns as self
+        Raises
+        ------
+        TypeError
+            If other is not a Table
+        ValueError
+            If other does not have the same columns as self
         """
         if not isinstance(other, Table):
             raise TypeError("other must be a Table")
@@ -114,19 +124,22 @@ class Table:
     def union_all(self, other: "Table") -> "Table":
         """Returns the union of two tables, including duplicates.
 
-        Args:
-            other (Table):
-                The table to union with
+        Parameters
+        ----------
+        other : Table
+            The table to union with
 
-        Returns:
-            Table:
-                The union with duplicates of the two tables
+        Returns
+        -------
+        Table
+            The union with duplicates of the two tables
 
-        Raises:
-            TypeError:
-                If other is not a Table
-            ValueError:
-                If other does not have the same columns as self
+        Raises
+        ------
+        TypeError
+            If other is not a Table
+        ValueError
+            If other does not have the same columns as self
         """
         if not isinstance(other, Table):
             raise TypeError("other must be a Table")
@@ -134,22 +147,34 @@ class Table:
             raise ValueError("other must have the same keys as self")
         return Table({k: self._data[k] + other._data[k] for k in self._data})
 
+    def where(self, col: str, func: callable) -> "Table":
+        if not callable(func):
+            raise TypeError("func must be callable")
+        empt = Table.empty(self.cols, self.dtypes)
+        for i, row in enumerate(self[col]):
+            if func(row):
+                empt.append_row(self.i(i))
+        return empt
+
     def intersect(self, other: "Table") -> "Table":
         """Returns the intersection of two tables.
 
-        Args:
-            other (Table):
-                The table to intersect with
+        Parameters
+        ----------
+        other : Table
+            The table to intersect with
 
-        Returns:
-            Table:
-                The intersection of the two tables
+        Returns
+        -------
+        Table
+            The intersection of the two tables
 
-        Raises:
-            TypeError:
-                If other is not a Table
-            ValueError:
-                If other does not have the same columns as self
+        Raises
+        ------
+        TypeError
+            If other is not a Table
+        ValueError
+            If other does not have the same columns as self
         """
         if self.cols != other.cols:
             raise ValueError("other must have the same columns as self")
@@ -162,17 +187,20 @@ class Table:
     def row_count(self, row: Sequence) -> int:
         """Returns the number of times a row appears in the table.
 
-        Args:
-            row (Sequence):
-                The row to count
+        Parameters
+        ----------
+        row : Sequence
+            The row to count
 
-        Returns:
-            int:
-                The number of times the row appears
+        Returns
+        -------
+        int
+            The number of times the row appears
 
-        Raises:
-            ValueError:
-                If row is not the same length as the columns
+        Raises
+        ------
+        ValueError
+            If row is not the same length as the columns
         """
         if len(row) != self.shape[0]:
             raise ValueError("row must be the same length as cols")
@@ -186,17 +214,20 @@ class Table:
     def contains_row(self, row: Sequence) -> bool:
         """Returns whether or not the table contains a row.
 
-        Args:
-            row (Sequence):
-                The row to check
+        Parameters
+        ----------
+        row : Sequence
+            The row to check
 
-        Returns:
-            bool:
-                Whether or not the table contains the row
+        Returns
+        -------
+        bool
+            Whether or not the table contains the row
 
-        Raises:
-            ValueError:
-                If row is not the same length as the columns
+        Raises
+        ------
+        ValueError
+            If row is not the same length as the columns
         """
         if len(row) != self.shape[0]:
             raise ValueError("row must be the same length as cols")
@@ -208,21 +239,24 @@ class Table:
     def sorted(self, column: str, desc: bool = False) -> "Table":
         """Returns a sorted table.
 
-        Args:
-            column (str):
-                The column to sort by
-            desc (bool):
-                Whether or not to sort in descending order
+        Parameters
+        ----------
+        column : str
+            The column to sort by
+        desc : bool, optional
+            Whether or not to sort in descending order
 
-        Returns:
-            Table:
-                The sorted table
+        Returns
+        -------
+        Table
+            The sorted table
 
-        Raises:
-            TypeError:
-                If column is not a string
-            ValueError:
-                If column is not a key in self
+        Raises
+        ------
+        TypeError
+            If column is not a string
+        ValueError
+            If column is not a key in self
         """
         if not isinstance(column, str):
             raise TypeError("column must be a string")
@@ -246,19 +280,22 @@ class Table:
     def sorted_by_pattern(self, pattern: Sequence[int]) -> "Table":
         """Returns a sorted table by a pattern.
 
-        Args:
-            pattern (Sequence[int]):
-                The pattern to sort by
+        Parameters
+        ----------
+        pattern : Sequence[int]
+            The pattern to sort by
 
-        Returns:
-            Table:
-                The sorted table
+        Returns
+        -------
+        Table
+            The sorted table
 
-        Raises:
-            TypeError:
-                If pattern is not a Sequence
-            ValueError:
-                If pattern is not the same length as the columns
+        Raises
+        ------
+        TypeError
+            If pattern is not a Sequence
+        ValueError
+            If pattern is not the same length as the columns
 
         Example:
             >>> t = Table.from_seqs([Seq([1, 2, 3], "a", int), Seq([4, 5, 6], "b", int)
@@ -305,21 +342,24 @@ class Table:
     def left_join(self, on: str, other: "Table") -> "Table":
         """Returns a left join of two tables.
 
-        Args:
-            on (str):
-                The column to join on
-            other (Table):
-                The table to join with
+        Parameters
+        ----------
+        on : str
+            The column to join on
+        other : Table
+            The table to join with
 
-        Returns:
-            Table:
-                The left join of the two tables
+        Returns
+        -------
+        Table
+            The left join of the two tables
 
-        Raises:
-            TypeError:
-                If other is not a Table
-            ValueError:
-                If other does not have the same columns as self
+        Raises
+        ------
+        TypeError
+            If other is not a Table
+        ValueError
+            If other does not have the same columns as self
         """
         if not isinstance(other, Table):
             raise TypeError("table must be a Table")
@@ -366,21 +406,24 @@ class Table:
     def append_row(self, row: Sequence) -> "Table":
         """Appends a row to the table.  The row must be the same length as the table.
 
-        Args:
-            row (Sequence):
-                The row to append
+        Parameters
+        ----------
+        row : Sequence
+            The row to append
 
-        Returns:
-            Table:
-                self
+        Returns
+        -------
+        Table
+            self
 
-        Raises:
-            TypeError:
-                If row is not a Sequence
-            ValueError:
-                If row is not the same length as the table
-            TypeError:
-                If row is not the same type as the table
+        Raises
+        ------
+        TypeError
+            If row is not a Sequence
+        TypeError
+            If row is not the same type as the table
+        ValueError
+            If row is not the same length as the table
         """
         if not isinstance(row, Sequence):
             raise TypeError("row must be a sequence")
@@ -401,13 +444,15 @@ class Table:
     def drop_col(self, col: str) -> "Table":
         """Drops a column from the table.
 
-        Args:
-            col (str):
-                The column to drop
+        Parameters
+        ----------
+        col : str
+            The column to drop
 
-        Returns:
-            Table:
-                self
+        Returns
+        -------
+        Table
+            self
         """
         del self._data[col]
         return self
@@ -419,13 +464,20 @@ class Table:
     def drop_row(self, index: int) -> "Table":
         """Drops a row from the table.
 
-        Args:
-            index (int):
-                The index of the row to drop
+        Parameters
+        ----------
+        index : int
+            The index of the row to drop
 
-        Returns:
-            Table:
-                self
+        Returns
+        -------
+        Table
+            self
+
+        Raises
+        ------
+        IndexError
+            If index is out of bounds
         """
         for col in self.cols:
             del self._data[col][index]
@@ -478,13 +530,17 @@ class Table:
     def empty(cols: Sequence[str] = [], dtypes: Sequence[Type] = []) -> "Table":
         """Creates an empty table.
 
-        Args:
-            cols (Sequence[str]):
-                The columns of the table
+        Parameters
+        ----------
+        cols : Sequence[str]
+            The columns of the table
+        dtypes : Sequence[Type]
+            The data types of the columns
 
-        Returns:
-            Table:
-                An empty table
+        Returns
+        -------
+        Table
+            An empty table
         """
         return Table({c: Seq.empty(c, dtype=d) for c, d in zip(cols, dtypes)})
 
@@ -492,13 +548,15 @@ class Table:
     def from_seqs(seqs: Sequence[Seq]) -> "Table":
         """Creates a table from a sequence of sequences.
 
-        Args:
-            seqs (Sequence[Seq]):
-                The sequences of Seq to create the table from
+        Parameters
+        ----------
+        seqs : Sequence[Seq]
+            The sequences to create the table from
 
-        Returns:
-            Table:
-                A table created from the sequences
+        Returns
+        -------
+        Table
+            A table created from the sequence of sequences
         """
         if len(set(s.name for s in seqs)) != len(list(seqs)):
             raise ValueError("seqs must have unique col")
@@ -510,15 +568,24 @@ class Table:
     ) -> "Table":
         """Creates a table from a dictionary of iterables.
 
-        Args:
-            d (dict[str, Sequence]):
-                The dictionary of iterables to create the table from
-            dtypes (Sequence[Type]):
-                The types of the columns
+        Parameters
+        ----------
+        d : dict[str, Sequence]
+            The dictionary of iterables to create the table from
+        dtypes : Sequence[Type]
+            The data types of the columns
 
-        Returns:
-            Table:
-                A table created from the dictionary of iterables
+        Returns
+        -------
+        Table
+            A table created from the dictionary of iterables
+
+        Raises
+        ------
+        ValueError
+            If dtypes is not the same length as d
+        TypeError
+            If dtypes is not a sequence of types
         """
         if dtypes is None:
             dtypes = [object for _ in d]
@@ -540,17 +607,19 @@ class Table:
     ) -> "Table":
         """Creates a table from a sequence of sequences.
 
-        Args:
-            data (Sequence):
-                The sequences of Seq to create the table from
-            cols (tuple[str]):
-                The columns of the table
-            dtypes (Sequence[Type]):
-                The types of the columns
+        Parameters
+        ----------
+        data : Sequence
+            The sequences to create the table from
+        cols : tuple[str]
+            The columns of the table
+        dtypes : Sequence[Type]
+            The data types of the columns
 
-        Returns:
-            Table:
-                A table created from the sequences
+        Returns
+        -------
+        Table
+            A table created from the sequence of sequences
         """
         cols = Table._create_cols(cols, data)
         if dtypes is None:
@@ -574,22 +643,24 @@ class Table:
     def plot(self, x: str, y: str, *args, **kargs) -> None:
         """Plots a column against another column.
 
-        Args:
-            x (str):
-                The column to plot on the x axis
-            y (str):
-                The column to plot on the y axis
+        Parameters
+        ----------
+        x : str
+            The column to plot on the x axis
+        y : str
+            The column to plot on the y axis
         """
         plt.plot(self[x], self[y], *args, **kargs)
 
     def scatter(self, x: str, y: str, *args, **kargs) -> None:
         """Scatters a column against another column.
 
-        Args:
-            x (str):
-                The column to plot on the x axis
-            y (str):
-                The column to plot on the y axis
+        Parameters
+        ----------
+        x : str
+            The column to plot on the x axis
+        y : str
+            The column to plot on the y axis
         """
         plt.scatter(self[x], self[y], *args, **kargs)
 
