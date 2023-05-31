@@ -319,32 +319,12 @@ class Table:
         r = list(list(s[i] for i in argsort(pattern)) for s in self._data.values())
         return Table.from_iterable(r)
 
-    def inner_join(self, on: str, other: "Table") -> "Table":
-        if not isinstance(other, Table):
-            raise TypeError("table must be a Table")
-        if not self[on].dtype == other[on].dtype:
-            raise ValueError("on must be the same type as self")
+    def inner_join(self, other: "Table", self_on: str, other_on: str) -> "Table":
+        return (
+            self.left_join(other, self_on, other_on).dropped_col(other_on).dropped_nones
+        )
 
-        if len(set(self.cols).intersection(set(other.cols))) != 1:
-            raise ValueError("other must not contain any of the same columns as self")
-
-        empt = Table.empty(other.cols, other.dtypes)
-        for val in self[on]:
-            index = -1
-            try:
-                index = other[on].find(val)
-            except ValueError:
-                index = -1
-            if index == -1:
-                empt.append_row([None] * self.shape[0])
-            else:
-                empt.append_row(other.i(index))
-        for col in self.cols:
-            if col in other.cols:
-                empt.drop_col(col)
-        return empt
-
-    def left_join(self, on: str, other: "Table") -> "Table":
+    def left_join(self, right: "Table", left_on: str, right_on: str) -> "Table":
         """Returns a left join of two tables.
 
         Parameters
@@ -366,44 +346,49 @@ class Table:
         ValueError
             If other does not have the same columns as self
         """
-        if not isinstance(other, Table):
+        if not isinstance(right, Table):
             raise TypeError("table must be a Table")
-        if not self[on].dtype == other[on].dtype:
+        if not self[left_on].dtype == right[right_on].dtype:
             raise ValueError("on must be the same type as self")
 
-        if len(set(self.cols).intersection(set(other.cols))) != 1:
+        common_cols = 0
+        if left_on == right_on:
+            common_cols = 1
+
+        if len(set(self.cols).intersection(set(right.cols))) != common_cols:
             raise ValueError("other must not contain any of the same columns as self")
 
-        empt = Table.empty(other.cols, other.dtypes)
-        for val in self[on]:
+        empt = Table.empty(right.cols, right.dtypes)
+        for val in self[left_on]:
             index = -1
             try:
-                index = other[on].find(val)
+                index = right[right_on].find(val)
             except ValueError:
                 index = -1
             if index == -1:
-                empt.append_row([None] * self.shape[0])
+                empt.append_row([None] * right.shape[0])
             else:
-                empt.append_row(other.i(index))
+                empt.append_row(right.i(index))
         for col in self.cols:
-            if col in other.cols:
+            if col in right.cols:
                 empt.drop_col(col)
         return self.concat(empt)
 
-    def right_join(self, on: str, other: "Table") -> "Table":
+    def right_join(self, left: "Table", left_on: str, right_on: str) -> "Table":
         """Returns a right join of two tables. Alias for left_join."""
-        return other.left_join(on, self)
+        return left.left_join(self, left_on=left_on, right_on=right_on)
 
     def group_by(self, col: str) -> list["Table"]:
         """Returns a list of tables grouped by a column."""
         res = []
-        prev_val = None
         empt = Table.empty(self.cols, self.dtypes)
         sorted = self.sorted(col)
+        prev_val = sorted[col][0]
         for i, val in enumerate(sorted[col]):
             if val != prev_val:
                 res.append(empt)
                 empt = Table.empty(sorted.cols, sorted.dtypes)
+                res.append(empt)
             empt.append_row(sorted.i(i))
             prev_val = val
         return res
@@ -432,7 +417,7 @@ class Table:
         """
         if not isinstance(row, Sequence):
             raise TypeError("row must be a sequence")
-        if len(row) != len(self._data.keys()):
+        if len(row) != self.shape[0]:
             raise ValueError("row must be the same length as self")
         for i, v in enumerate(row):
             if (
@@ -502,9 +487,17 @@ class Table:
                 i += 1
         return self
 
+    @property
     def dropped_nones(self) -> "Table":
         """Returns a copy of the table with all rows that contain None dropped."""
         return copy(self).drop_nones()
+
+    def get_nones(self) -> "Table":
+        empt = Table.empty(self.cols, self.dtypes)
+        for row in self:
+            if None in row:
+                empt.append_row(row)
+        return empt
 
     def i(self, index: int) -> tuple:
         """Returns a row at an index."""
@@ -518,7 +511,7 @@ class Table:
         """Returns the last n rows of the table."""
         return Table({k: v.tail(n) for k, v in self._data.items()})
 
-    def plot(self, x: str, y: str, *args, **kargs) -> None:
+    def plot(self, x: str, y: str, **kargs) -> None:
         """Plots a column against another column.
 
         Parameters
@@ -528,9 +521,12 @@ class Table:
         y : str
             The column to plot on the y axis
         """
-        plt.plot(self[x], self[y], *args, **kargs)
+        sorted = self.sorted(x)
+        xs = sorted[x].as_pycollection(list)
+        ys = sorted[y].as_pycollection(list)
+        plt.plot(xs, ys, **kargs)
 
-    def scatter(self, x: str, y: str, *args, **kargs) -> None:
+    def scatter(self, x: str, y: str, **kargs) -> None:
         """Scatters a column against another column.
 
         Parameters
@@ -540,7 +536,20 @@ class Table:
         y : str
             The column to plot on the y axis
         """
-        plt.scatter(self[x], self[y], *args, **kargs)
+        sorted = self.sorted(x)
+        xs = sorted[x].as_pycollection(list)
+        ys = sorted[y].as_pycollection(list)
+        plt.scatter(xs, ys, **kargs)
+
+    def bar(self, col: str, height, **kargs) -> None:
+        """Plots a bar graph of a column.
+
+        Parameters
+        ----------
+        col : str
+            The column to plot
+        """
+        plt.bar(self[col], height=height, **kargs)
 
     def _smooth(self):
         max_len = max(len(s) for s in self._data.values())

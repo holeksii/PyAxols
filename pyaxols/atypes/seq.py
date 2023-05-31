@@ -1,4 +1,5 @@
 from typing import Callable, Type, Sequence
+from matplotlib import legend
 import matplotlib.pyplot as plt
 
 
@@ -257,7 +258,7 @@ class Seq:
         """
         return Seq(self.data, self.name, dtype)
 
-    def as_pycollection(self, coltype: Type) -> Sequence:
+    def as_pycollection(self, coltype: Type = list) -> Sequence:
         """Convert the sequence to a python collection.
 
         Parameters
@@ -282,7 +283,7 @@ class Seq:
         """
         plt.hist(self.data, bins, *args, **kwargs)
 
-    def pie(self, labels=None, *args, **kwargs) -> None:
+    def pie(self, labels=None, limit=False, *args, **kwargs) -> None:
         """Plot a pie chart of the sequence.
 
         Parameters
@@ -290,14 +291,18 @@ class Seq:
         labels : None, optional
             The labels to use, by default None
         """
+        data = self.data
+        if limit:
+            data = self.data[:limit] + [sum(self.data[limit:])]
+
         if labels is False:
             labels = None
         elif labels is None:
-            labels = self.data
+            labels = data[:limit] + ["Other"]
+
         plt.pie(
-            self.data,
+            data,
             labels=labels,
-            *args,
             **kwargs,
         )
 
