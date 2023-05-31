@@ -115,11 +115,16 @@ class Table:
             raise TypeError("other must be a Table")
         if self._data.keys() != other._data.keys():
             raise ValueError("other must have the same keys as self")
-        cpy = copy(self)
+
+        empt = Table.empty(self.cols, self.dtypes)
+
         for row in other:
-            if not cpy.contains_row(row):
-                cpy.append_row(row)
-        return cpy
+            if not empt.contains_row(row):
+                empt.append_row(row)
+        for row in self:
+            if not empt.contains_row(row):
+                empt.append_row(row)
+        return empt
 
     def union_all(self, other: "Table") -> "Table":
         """Returns the union of two tables, including duplicates.
@@ -146,15 +151,6 @@ class Table:
         if self._data.keys() != other._data.keys():
             raise ValueError("other must have the same keys as self")
         return Table({k: self._data[k] + other._data[k] for k in self._data})
-
-    def where(self, col: str, func: callable) -> "Table":
-        if not callable(func):
-            raise TypeError("func must be callable")
-        empt = Table.empty(self.cols, self.dtypes)
-        for i, row in enumerate(self[col]):
-            if func(row):
-                empt.append_row(self.i(i))
-        return empt
 
     def intersect(self, other: "Table") -> "Table":
         """Returns the intersection of two tables.
@@ -183,6 +179,15 @@ class Table:
             if other.contains_row(row):
                 emt.append_row(row)
         return emt
+
+    def where(self, col: str, func: callable) -> "Table":
+        if not callable(func):
+            raise TypeError("func must be callable")
+        empt = Table.empty(self.cols, self.dtypes)
+        for i, row in enumerate(self[col]):
+            if func(row):
+                empt.append_row(self.i(i))
+        return empt
 
     def row_count(self, row: Sequence) -> int:
         """Returns the number of times a row appears in the table.
@@ -505,6 +510,38 @@ class Table:
         """Returns a row at an index."""
         return tuple(s[index] for s in self._data.values())
 
+    def head(self, n: int = 5) -> "Table":
+        """Returns the first n rows of the table."""
+        return Table({k: v.head(n) for k, v in self._data.items()})
+
+    def tail(self, n: int = 5) -> "Table":
+        """Returns the last n rows of the table."""
+        return Table({k: v.tail(n) for k, v in self._data.items()})
+
+    def plot(self, x: str, y: str, *args, **kargs) -> None:
+        """Plots a column against another column.
+
+        Parameters
+        ----------
+        x : str
+            The column to plot on the x axis
+        y : str
+            The column to plot on the y axis
+        """
+        plt.plot(self[x], self[y], *args, **kargs)
+
+    def scatter(self, x: str, y: str, *args, **kargs) -> None:
+        """Scatters a column against another column.
+
+        Parameters
+        ----------
+        x : str
+            The column to plot on the x axis
+        y : str
+            The column to plot on the y axis
+        """
+        plt.scatter(self[x], self[y], *args, **kargs)
+
     def _smooth(self):
         max_len = max(len(s) for s in self._data.values())
         for k, v in self._data.items():
@@ -632,38 +669,6 @@ class Table:
         d = {col: Seq(d, col, dtype) for col, d, dtype in zip(cols, data, dtypes)}
         return Table(d)
 
-    def head(self, n: int = 5) -> "Table":
-        """Returns the first n rows of the table."""
-        return Table({k: v.head(n) for k, v in self._data.items()})
-
-    def tail(self, n: int = 5) -> "Table":
-        """Returns the last n rows of the table."""
-        return Table({k: v.tail(n) for k, v in self._data.items()})
-
-    def plot(self, x: str, y: str, *args, **kargs) -> None:
-        """Plots a column against another column.
-
-        Parameters
-        ----------
-        x : str
-            The column to plot on the x axis
-        y : str
-            The column to plot on the y axis
-        """
-        plt.plot(self[x], self[y], *args, **kargs)
-
-    def scatter(self, x: str, y: str, *args, **kargs) -> None:
-        """Scatters a column against another column.
-
-        Parameters
-        ----------
-        x : str
-            The column to plot on the x axis
-        y : str
-            The column to plot on the y axis
-        """
-        plt.scatter(self[x], self[y], *args, **kargs)
-
     @property
     def cols(self) -> tuple[str]:
         """Returns the columns of the table."""
@@ -703,9 +708,6 @@ class Table:
 
         return tabulate(self._data, headers="keys", tablefmt="psql", showindex=True)
 
-    def __repr__(self) -> str:
-        return self.__str__()
-
     def __len__(self) -> int:
         return len(self._data)
 
@@ -719,3 +721,6 @@ class Table:
             return self.i(self.it - 1)
         else:
             raise StopIteration
+
+    def __contains__(self, row: tuple) -> bool:
+        return self.contains_row(row)
